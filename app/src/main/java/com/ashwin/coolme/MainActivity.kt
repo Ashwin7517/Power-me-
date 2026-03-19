@@ -73,9 +73,7 @@ class MainActivity : AppCompatActivity() {
 
             val packageNames = selectedApps.map { it.packageName }
             
-            ForceStopAccessibilityService.appsToClose.clear()
-            ForceStopAccessibilityService.appsToClose.addAll(packageNames)
-            ForceStopAccessibilityService.isRunning = true
+            ForceStopAccessibilityService.start(packageNames)
             
             if (ForceStopAccessibilityService.appsToClose.isNotEmpty()) {
                val pName = ForceStopAccessibilityService.appsToClose[0]

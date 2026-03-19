@@ -14,7 +14,14 @@ class ForceStopAccessibilityService : AccessibilityService() {
     companion object {
         var isRunning = false
         var appsToClose = mutableListOf<String>()
-        private var lastPackageHandled: String? = null
+        var lastPackageHandled: String? = null
+        
+        fun start(packages: List<String>) {
+            appsToClose.clear()
+            appsToClose.addAll(packages)
+            lastPackageHandled = null
+            isRunning = true
+        }
     }
 
     override fun onServiceConnected() {
