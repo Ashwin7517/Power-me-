@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import android.app.AlertDialog
+import android.util.Log
 
 class MainActivity : AppCompatActivity() {
 
@@ -45,16 +46,9 @@ class MainActivity : AppCompatActivity() {
 
             val packageNames = selectedApps.map { it.packageName }
             
-            // Note: Accessibility Services act on system UI events. 
-            // Here we would typically start the service logic
-            // Because we can't directly call startClosingApps from here if it's not bound,
-            // A more robust implementation would use startService or binding.
-            // For simplicity in this example, we assume we can pass data to the service.
-            
             val intent = Intent(this, ForceStopAccessibilityService::class.java).apply {
                 putStringArrayListExtra("PACKAGES", ArrayList(packageNames))
             }
-            // Start the action if service is ready. In this minimal code, we use a static method as an example.
             ForceStopAccessibilityService.appsToClose.clear()
             ForceStopAccessibilityService.appsToClose.addAll(packageNames)
             ForceStopAccessibilityService.isRunning = true
@@ -73,21 +67,41 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun loadApps() {
-        val pm = packageManager
-        val packages = pm.getInstalledApplications(PackageManager.GET_META_DATA)
-        
-        for (packageInfo in packages) {
-            // Filter out system apps loosely
-            if ((packageInfo.flags and ApplicationInfo.FLAG_SYSTEM) == 0 && packageInfo.packageName != packageName) {
-                val name = pm.getApplicationLabel(packageInfo).toString()
-                val icon = pm.getApplicationIcon(packageInfo)
-                val packageName = packageInfo.packageName
-                appList.add(AppInfo(name, packageName, icon))
+        Thread {
+            val pm = packageManager
+            val packages = pm.getInstalledApplications(PackageManager.GET_META_DATA)
+            val tempList = mutableListOf<AppInfo>()
+            
+            for (packageInfo in packages) {
+                // Safely get app name, sometimes it can throw exceptions for weird packages
+                try {
+                    val isSystemApp = (packageInfo.flags and ApplicationInfo.FLAG_SYSTEM) != 0
+                    val isUpdatedSystemApp = (packageInfo.flags and ApplicationInfo.FLAG_UPDATED_SYSTEM_APP) != 0
+                    
+                    if ((!isSystemApp || isUpdatedSystemApp) && packageInfo.packageName != packageName) {
+                        val name = pm.getApplicationLabel(packageInfo).toString()
+                        val icon = pm.getApplicationIcon(packageInfo)
+                        val packageName = packageInfo.packageName
+                        tempList.add(AppInfo(name, packageName, icon))
+                    }
+                } catch (e: Exception) {
+                    Log.e("MainActivity", "Error loading app: ${packageInfo.packageName}", e)
+                }
             }
-        }
-        
-        adapter = AppListAdapter(appList)
-        recyclerView.adapter = adapter
+            
+            // Sort alphabetically
+            tempList.sortBy { it.name.lowercase() }
+            
+            runOnUiThread {
+                appList.clear()
+                appList.addAll(tempList)
+                adapter = AppListAdapter(appList)
+                recyclerView.adapter = adapter
+                if (appList.isEmpty()) {
+                   Toast.makeText(this@MainActivity, "No user apps found to display.", Toast.LENGTH_LONG).show()
+                }
+            }
+        }.start()
     }
 
     private fun isAccessibilityServiceEnabled(context: Context, service: Class<*>): Boolean {
