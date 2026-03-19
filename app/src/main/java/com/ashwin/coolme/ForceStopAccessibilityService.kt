@@ -14,6 +14,7 @@ class ForceStopAccessibilityService : AccessibilityService() {
     companion object {
         var isRunning = false
         var appsToClose = mutableListOf<String>()
+        private var lastPackageHandled: String? = null
     }
 
     override fun onServiceConnected() {
@@ -30,30 +31,75 @@ class ForceStopAccessibilityService : AccessibilityService() {
         if (!isRunning || appsToClose.isEmpty()) return
 
         val rootNode = rootInActiveWindow ?: return
+        val currentPackage = appsToClose[0]
         
-        // Find the "Force Stop" button or its localized equivalent.
-        // Note: The text "Force stop" or "Force Stop" might change based on the device language or OEM.
-        // It's usually a button in the App Info settings screen.
-        var forceStopNodes = rootNode.findAccessibilityNodeInfosByText("Force stop")
+        // Try finding by common IDs first (more reliable across languages)
+        var forceStopNodes = rootNode.findAccessibilityNodeInfosByViewId("com.android.settings:id/force_stop_button")
+        
+        // Fallback to text search for "Force stop" or localized equivalents
         if (forceStopNodes.isEmpty()) {
-             forceStopNodes = rootNode.findAccessibilityNodeInfosByText("Force Stop")
+            forceStopNodes = rootNode.findAccessibilityNodeInfosByText("Force stop")
+        }
+        if (forceStopNodes.isEmpty()) {
+            forceStopNodes = rootNode.findAccessibilityNodeInfosByText("Force Stop")
         }
 
         if (forceStopNodes.isNotEmpty()) {
             val button = forceStopNodes[0]
-            if (button.isEnabled && button.isClickable) {
-                button.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+            if (button.isEnabled) {
+                if (button.isClickable) {
+                    button.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                } else {
+                    // Sometimes the button itself isn't clickable but its parent is
+                    var parent = button.parent
+                    while (parent != null) {
+                        if (parent.isClickable) {
+                            parent.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                            break
+                        }
+                        parent = parent.parent
+                    }
+                }
+            } else {
+                // Button is disabled, app is already stopped or cannot be stopped.
+                // Ensure we only skip it once.
+                if (lastPackageHandled != currentPackage) {
+                    lastPackageHandled = currentPackage
+                    Log.d("AppCooler", "App $currentPackage already stopped or cannot be stopped. Skipping.")
+                    if (appsToClose.isNotEmpty()) {
+                        appsToClose.removeAt(0)
+                    }
+                    closeNextApp()
+                }
             }
         } else {
-            // Find "OK" button in the confirmation dialog
-            val okNodes = rootNode.findAccessibilityNodeInfosByText("OK")
+            // Check for confirmation dialog buttons
+            // Common IDs: android:id/button1 (usually OK/Positive)
+            var okNodes = rootNode.findAccessibilityNodeInfosByViewId("android:id/button1")
+            
+            if (okNodes.isEmpty()) {
+                okNodes = rootNode.findAccessibilityNodeInfosByText("OK")
+            }
+            if (okNodes.isEmpty()) {
+                okNodes = rootNode.findAccessibilityNodeInfosByText("Force stop") // In some dialogs the button is also "Force stop"
+            }
+            if (okNodes.isEmpty()) {
+                okNodes = rootNode.findAccessibilityNodeInfosByText("Force Stop")
+            }
+
             if (okNodes.isNotEmpty()) {
                 val okButton = okNodes[0]
                 if (okButton.isEnabled && okButton.isClickable) {
-                    okButton.performAction(AccessibilityNodeInfo.ACTION_CLICK)
-                    // Once closed, move to the next app
-                    appsToClose.removeAt(0)
-                    closeNextApp()
+                    // Only click OK if we haven't already handled this package's closing
+                    if (lastPackageHandled != currentPackage) {
+                        lastPackageHandled = currentPackage
+                        okButton.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                        // Once closed, move to the next app
+                        if (appsToClose.isNotEmpty()) {
+                            appsToClose.removeAt(0)
+                        }
+                        closeNextApp()
+                    }
                 }
             }
         }
@@ -63,12 +109,20 @@ class ForceStopAccessibilityService : AccessibilityService() {
         appsToClose.clear()
         appsToClose.addAll(packages)
         isRunning = true
+        lastPackageHandled = null
         closeNextApp()
     }
 
     private fun closeNextApp() {
         if (appsToClose.isNotEmpty()) {
             val packageName = appsToClose[0]
+            // If the next app is already the one we just handled (shouldn't happen), skip it
+            if (packageName == lastPackageHandled) {
+                appsToClose.removeAt(0)
+                closeNextApp()
+                return
+            }
+            
             val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                 data = Uri.parse("package:$packageName")
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
@@ -76,6 +130,7 @@ class ForceStopAccessibilityService : AccessibilityService() {
             startActivity(intent)
         } else {
             isRunning = false
+            lastPackageHandled = null
             // Go back to the main app when done
             val intent = Intent(this, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
