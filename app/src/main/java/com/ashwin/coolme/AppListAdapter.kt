@@ -5,12 +5,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.CheckBox
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 import java.util.Locale
 
-class AppListAdapter(private var appList: List<AppInfo>) :
+class AppListAdapter(
+    private var appList: List<AppInfo>,
+    private val onUninstallClick: (AppInfo) -> Unit
+) :
     RecyclerView.Adapter<AppListAdapter.AppViewHolder>() {
 
     private var fullList: List<AppInfo> = ArrayList(appList)
@@ -21,6 +25,7 @@ class AppListAdapter(private var appList: List<AppInfo>) :
         val appBatteryUsage: TextView = view.findViewById(R.id.appBatteryUsage)
         val appRamUsage: TextView = view.findViewById(R.id.appRamUsage)
         val appStorageUsage: TextView = view.findViewById(R.id.appStorageUsage)
+        val btnUninstall: ImageButton = view.findViewById(R.id.btnUninstall)
         val appCheckbox: CheckBox = view.findViewById(R.id.appCheckbox)
     }
 
@@ -50,6 +55,10 @@ class AppListAdapter(private var appList: List<AppInfo>) :
         
         holder.appCheckbox.setOnCheckedChangeListener { _, isChecked ->
             appInfo.isSelected = isChecked
+        }
+
+        holder.btnUninstall.setOnClickListener {
+            onUninstallClick(appInfo)
         }
     }
 

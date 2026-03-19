@@ -47,6 +47,15 @@
             android:textSize="12sp" />
     </LinearLayout>
 
+    <ImageButton
+        android:id="@+id/btnUninstall"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="8dp"
+        android:src="@android:drawable/ic_menu_delete"
+        android:contentDescription="Uninstall app" />
+
     <CheckBox
         android:id="@+id/appCheckbox"
         android:layout_width="wrap_content"

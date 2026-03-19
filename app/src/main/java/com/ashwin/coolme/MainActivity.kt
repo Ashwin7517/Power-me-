@@ -10,6 +10,7 @@ import android.text.TextUtils
 import android.widget.Button
 import android.widget.CheckBox
 import android.widget.Toast
+import android.net.Uri
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -41,7 +42,12 @@ class MainActivity : AppCompatActivity() {
         val chipStorage: Chip = findViewById(R.id.chipStorage)
 
         // Initialize adapter with empty list initially
-        adapter = AppListAdapter(appList)
+        adapter = AppListAdapter(appList) { appInfo ->
+            val intent = Intent(Intent.ACTION_DELETE).apply {
+                data = Uri.parse("package:${appInfo.packageName}")
+            }
+            startActivity(intent)
+        }
         recyclerView.adapter = adapter
 
         loadApps()
@@ -94,6 +100,14 @@ class MainActivity : AppCompatActivity() {
             }
             
             Toast.makeText(this, "Cooling down... Closing selected apps", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Refresh apps list in case some were uninstalled
+        if (::adapter.isInitialized) {
+            loadApps()
         }
     }
 
