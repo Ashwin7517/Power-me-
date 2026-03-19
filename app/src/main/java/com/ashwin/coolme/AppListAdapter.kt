@@ -61,18 +61,21 @@ class AppListAdapter(private var appList: List<AppInfo>) :
     
     @SuppressLint("NotifyDataSetChanged")
     fun sortByPower() {
+        fullList = fullList.sortedByDescending { it.batteryPercentage }
         appList = appList.sortedByDescending { it.batteryPercentage }
         notifyDataSetChanged()
     }
 
     @SuppressLint("NotifyDataSetChanged")
     fun sortByRam() {
+        fullList = fullList.sortedByDescending { it.ramUsage }
         appList = appList.sortedByDescending { it.ramUsage }
         notifyDataSetChanged()
     }
 
     @SuppressLint("NotifyDataSetChanged")
     fun sortByStorage() {
+        fullList = fullList.sortedByDescending { it.storageUsage }
         appList = appList.sortedByDescending { it.storageUsage }
         notifyDataSetChanged()
     }
