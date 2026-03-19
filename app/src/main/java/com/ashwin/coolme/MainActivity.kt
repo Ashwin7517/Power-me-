@@ -71,12 +71,12 @@ class MainActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val packageNames = selectedApps.map { it.packageName }
+            val appData = selectedApps.map { it.packageName to it.name }
             
-            ForceStopAccessibilityService.start(packageNames)
+            ForceStopAccessibilityService.start(appData)
             
             if (ForceStopAccessibilityService.appsToClose.isNotEmpty()) {
-               val pName = ForceStopAccessibilityService.appsToClose[0]
+               val (pName, _) = ForceStopAccessibilityService.appsToClose[0]
                val detailIntent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
                     data = android.net.Uri.parse("package:$pName")
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_HISTORY or Intent.FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS
