@@ -30,7 +30,21 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textColor="#E53935"
-            android:textSize="14sp" />
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/appRamUsage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#1976D2"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/appStorageUsage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="#388E3C"
+            android:textSize="12sp" />
     </LinearLayout>
 
     <CheckBox

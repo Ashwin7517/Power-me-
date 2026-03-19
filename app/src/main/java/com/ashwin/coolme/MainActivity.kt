@@ -16,6 +16,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import android.app.AlertDialog
 import android.util.Log
+import com.google.android.material.chip.Chip
 import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
@@ -34,6 +35,10 @@ class MainActivity : AppCompatActivity() {
         val btnCoolDown: Button = findViewById(R.id.btnCoolDown)
         val cbSelectAll: CheckBox = findViewById(R.id.cbSelectAll)
         val searchView: SearchView = findViewById(R.id.searchView)
+        
+        val chipPower: Chip = findViewById(R.id.chipPower)
+        val chipRam: Chip = findViewById(R.id.chipRam)
+        val chipStorage: Chip = findViewById(R.id.chipStorage)
 
         // Initialize adapter with empty list initially
         adapter = AppListAdapter(appList)
@@ -58,6 +63,10 @@ class MainActivity : AppCompatActivity() {
                 adapter.selectAll(isChecked)
             }
         }
+        
+        chipPower.setOnClickListener { adapter.sortByPower() }
+        chipRam.setOnClickListener { adapter.sortByRam() }
+        chipStorage.setOnClickListener { adapter.sortByStorage() }
 
         btnCoolDown.setOnClickListener {
             if (!isAccessibilityServiceEnabled(this, ForceStopAccessibilityService::class.java)) {
@@ -104,16 +113,20 @@ class MainActivity : AppCompatActivity() {
                         val icon = pm.getApplicationIcon(packageInfo)
                         val packageName = packageInfo.packageName
                         
-                        val batteryPct = Random.nextFloat() * 15.0f
+                        // Mocking percentage values for demo purposes
+                        // Real values for per-app battery and RAM are heavily restricted on modern Android
+                        val powerPct = Random.nextFloat() * 20.0f
+                        val ramPct = Random.nextFloat() * 15.0f
+                        val storagePct = Random.nextFloat() * 10.0f
                         
-                        tempList.add(AppInfo(name, packageName, icon, batteryPct))
+                        tempList.add(AppInfo(name, packageName, icon, powerPct, ramPct, storagePct))
                     }
                 } catch (e: Exception) {
                     Log.e("MainActivity", "Error loading app: ${packageInfo.packageName}", e)
                 }
             }
             
-            tempList.sortBy { it.name.lowercase() }
+            tempList.sortByDescending { it.batteryPercentage }
             
             runOnUiThread {
                 appList.clear()

@@ -19,6 +19,8 @@ class AppListAdapter(private var appList: List<AppInfo>) :
         val appIcon: ImageView = view.findViewById(R.id.appIcon)
         val appName: TextView = view.findViewById(R.id.appName)
         val appBatteryUsage: TextView = view.findViewById(R.id.appBatteryUsage)
+        val appRamUsage: TextView = view.findViewById(R.id.appRamUsage)
+        val appStorageUsage: TextView = view.findViewById(R.id.appStorageUsage)
         val appCheckbox: CheckBox = view.findViewById(R.id.appCheckbox)
     }
 
@@ -28,13 +30,15 @@ class AppListAdapter(private var appList: List<AppInfo>) :
         return AppViewHolder(view)
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: AppViewHolder, position: Int) {
         val appInfo = appList[position]
         holder.appName.text = appInfo.name
         holder.appIcon.setImageDrawable(appInfo.icon)
         
-        val batteryText = String.format("Power consuming: %.1f%%", appInfo.batteryPercentage)
-        holder.appBatteryUsage.text = batteryText
+        holder.appBatteryUsage.text = String.format("Power: %.1f%%", appInfo.batteryPercentage)
+        holder.appRamUsage.text = String.format("RAM: %.1f%%", appInfo.ramUsage)
+        holder.appStorageUsage.text = String.format("Storage: %.1f%%", appInfo.storageUsage)
         
         holder.appCheckbox.setOnCheckedChangeListener(null)
         holder.appCheckbox.isChecked = appInfo.isSelected
@@ -55,6 +59,24 @@ class AppListAdapter(private var appList: List<AppInfo>) :
         return fullList.filter { it.isSelected }
     }
     
+    @SuppressLint("NotifyDataSetChanged")
+    fun sortByPower() {
+        appList = appList.sortedByDescending { it.batteryPercentage }
+        notifyDataSetChanged()
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun sortByRam() {
+        appList = appList.sortedByDescending { it.ramUsage }
+        notifyDataSetChanged()
+    }
+
+    @SuppressLint("NotifyDataSetChanged")
+    fun sortByStorage() {
+        appList = appList.sortedByDescending { it.storageUsage }
+        notifyDataSetChanged()
+    }
+
     @SuppressLint("NotifyDataSetChanged")
     fun selectAll(selectAll: Boolean) {
         for (app in appList) {

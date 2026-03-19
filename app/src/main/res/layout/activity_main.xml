@@ -29,16 +29,65 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/searchView" />
 
+    <HorizontalScrollView
+        android:id="@+id/sortOptions"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:scrollbars="none"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/cbSelectAll">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipPower"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="Highest Power"
+                app:chipIconEnabled="true"
+                app:chipIcon="@android:drawable/ic_lock_idle_low_battery"
+                style="@style/Widget.MaterialComponents.Chip.Action" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipRam"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:text="Highest RAM"
+                app:chipIconEnabled="true"
+                app:chipIcon="@android:drawable/ic_menu_agenda"
+                style="@style/Widget.MaterialComponents.Chip.Action" />
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/chipStorage"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Highest Storage"
+                app:chipIconEnabled="true"
+                app:chipIcon="@android:drawable/ic_menu_save"
+                style="@style/Widget.MaterialComponents.Chip.Action" />
+
+        </LinearLayout>
+    </HorizontalScrollView>
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerViewApps"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="4dp"
         android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toTopOf="@+id/btnCoolDown"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/cbSelectAll" />
+        app:layout_constraintTop_toBottomOf="@+id/sortOptions" />
 
     <Button
         android:id="@+id/btnCoolDown"
